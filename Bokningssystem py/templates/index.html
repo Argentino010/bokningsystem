@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catriels bokningsystem</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+    <header>
+        <h1>Barbers Of Sweden</h1>
+    </header>
+
+    <section class="bokning">
+        <div>
+            <h1>Boka din tid här:</h1>
+
+            <div>
+                <label for="önskemål">Välj klippning:</label>
+                <select id="önskemål">
+                    <option value="">-- Välj --</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="rabatt">Rabattkod (om du har en):</label>
+                <input type="text" id="rabatt" placeholder="Skriv rabattkod">
+            </div>
+
+            <button id="knapp">Boka</button>
+
+            <div class="result" id="result"></div>
+        </div>
+
+
+    </section>
+
+    <footer>
+        <p style="transform:rotate(180deg);">rabbatkoder : kompispris123 eller broderpris</p>
+    </footer>
+
+
+    <script>
+
+        window.onload = function () {
+            fetch('/klippningar')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('önskemål');
+                    Object.keys(data).forEach(klippning => {
+                        const option = document.createElement('option');
+                        option.value = klippning;
+                        option.textContent = `${klippning} - ${data[klippning]} kr`;
+                        select.appendChild(option);
+                    });
+                });
+        };
+
+
+        document.getElementById('knapp').addEventListener('click', function () {
+            const önskemål = document.getElementById('önskemål').value;
+            const rabatt = document.getElementById('rabatt').value;
+
+            if (!önskemål) {
+                document.getElementById('result').innerHTML = "<p class='error'>Vänligen välj en klippning.</p>";
+                return;
+            }
+
+            fetch('/boka', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ önskemål: önskemål, rabatt: rabatt })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('result').innerHTML = `<p class='error'>${data.error}</p>`;
+                    } else {
+                        document.getElementById('result').innerHTML = `<p>Du har bokat en ${data.önskemål}. Det blir ${data.pris} kronor.</p>`;
+                    }
+                });
+        });
+    </script>
+</body>
+
+</html>
